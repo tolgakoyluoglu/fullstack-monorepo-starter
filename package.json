@@ -11,7 +11,7 @@
     "build": "npm run build --workspaces",
     "dev": "concurrently -n \"client,api\" -c \"blue,green\" \"npm run dev:client\" \"npm run dev:api\"",
     "dev:client": "npm run dev --workspace=client",
-    "dev:api": "npm run start:dev --workspace=api",
+    "dev:api": "npm run start:dev --watch --workspace=api",
     "start": "concurrently \"npm:start:*\"",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write \"apps/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
