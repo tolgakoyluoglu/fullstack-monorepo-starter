@@ -30,11 +30,13 @@ A full-stack monorepo application with authentication.
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Set up environment variables**
+
    ```bash
    # API environment
    cp apps/api/.env.example apps/api/.env
@@ -44,17 +46,21 @@ A full-stack monorepo application with authentication.
    ```
 
 3. **Generate a secure session secret**
+
    ```bash
    node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
    ```
+
    Copy the output and replace `SESSION_SECRET` in `apps/api/.env`
 
 4. **Start database**
+
    ```bash
    npm run db
    ```
 
 5. **Push database schema**
+
    ```bash
    cd apps/api
    npm run db:push
@@ -96,6 +102,7 @@ A full-stack monorepo application with authentication.
 ## Features
 
 ### Authentication & Security
+
 - User authentication (register/login/logout)
 - HTTP-only session cookies
 - Role-based access control (USER/ADMIN)
@@ -105,12 +112,13 @@ A full-stack monorepo application with authentication.
 - DTO validation with class-validator
 
 ### Code Quality
-- Pre-commit hooks (Husky + lint-staged)
+
 - Auto-formatting with Prettier
 - ESLint with TypeScript
 - Shared types between client and API
 
 ### Developer Experience
+
 - TypeScript monorepo with npm workspaces
 - Path aliases (@/ imports)
 - CSS Modules for styling
