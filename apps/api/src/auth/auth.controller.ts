@@ -10,7 +10,8 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Req() req: Request) {
-    const user = await this.authService.register(dto.email, dto.password, dto.name)
+    const { email, password, name } = dto
+    const user = await this.authService.register({ email, password, name })
 
     req.session.userId = user.id
     return {
@@ -21,7 +22,8 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() dto: LoginDto, @Req() req: Request) {
-    const user = await this.authService.login(dto.email, dto.password)
+    const { email, password } = dto
+    const user = await this.authService.login({ email, password })
 
     req.session.userId = user.id
     return {

@@ -1,15 +1,30 @@
 import { NestFactory } from '@nestjs/core'
+import { ValidationPipe, Logger } from '@nestjs/common'
 import { AppModule } from './app.module'
 import * as session from 'express-session'
 import * as ConnectPgSimple from 'connect-pg-simple'
+import helmet from 'helmet'
+import { HttpExceptionFilter } from './common/filters/http-exception.filter'
+import { SanitizePipe } from './common/pipes/sanitize.pipe'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  const logger = new Logger('Bootstrap')
 
+  app.use(helmet())
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  )
+  app.useGlobalPipes(new SanitizePipe())
+  app.useGlobalFilters(new HttpExceptionFilter())
 
   const PgSession = ConnectPgSimple(session)
 
@@ -21,7 +36,7 @@ async function bootstrap() {
         },
         createTableIfMissing: true,
       }),
-      secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+      secret: process.env.SESSION_SECRET!,
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -33,7 +48,8 @@ async function bootstrap() {
     }),
   )
 
-  await app.listen(process.env.PORT ?? 3000)
-  console.log('Server running on http://localhost:3000')
+  const port = process.env.PORT ?? 3000
+  await app.listen(port)
+  logger.log(`🚀 Server running on http://localhost:${port}`)
 }
 void bootstrap()

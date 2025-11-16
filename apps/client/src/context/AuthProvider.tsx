@@ -1,46 +1,38 @@
-import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { api } from '@/lib/axios'
 import { AuthContext } from './AuthContext'
-import type { RegisterDto, LoginDto, User } from '@fullstack-monorepo/shared'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import type { User } from '@fullstack-monorepo/shared'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
+  const { data: user = null, isLoading } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      try {
+        const response = await api.get<User>('/auth/me')
+        return response.data
+      } catch {
+        return null
+      }
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
 
-  const checkAuth = async () => {
-    try {
-      const response = await api.get('/auth/me')
-      setUser(response.data)
-    } catch {
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
+  const { mutate: logout, isPending: isLogoutLoading } = useMutation({
+    mutationFn: () => api.post('/auth/logout'),
+    onSuccess: () => {
+      queryClient.setQueryData(['user'], null)
+    },
+  })
+
+  const value = {
+    user,
+    loading: isLoading || isLogoutLoading,
+    logout,
   }
 
-  const login = async (data: LoginDto) => {
-    const response = await api.post('/auth/login', data)
-    setUser(response.data.user)
-  }
-
-  const register = async (data: RegisterDto) => {
-    const response = await api.post('/auth/register', data)
-    setUser(response.data.user)
-  }
-
-  const logout = async () => {
-    await api.post('/auth/logout')
-    setUser(null)
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

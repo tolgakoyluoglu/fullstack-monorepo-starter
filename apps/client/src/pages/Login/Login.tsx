@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { useLogin } from '@/hooks/useAuth'
 import { Input } from '@/components/Input/Input'
 import { Button } from '@/components/Button/Button'
 import styles from './Login.module.css'
@@ -10,24 +10,18 @@ export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: FormEvent) => {
+  const { mutate: login, isPending: isLoginLoading } = useLogin(
+    () => navigate('/'),
+    (error) => setError(error),
+  )
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
-
-    try {
-      await login({ email, password })
-      navigate('/')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
-    } finally {
-      setLoading(false)
-    }
+    login({ email, password })
   }
 
   return (
@@ -57,8 +51,8 @@ export function Login() {
             required
           />
 
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+          <Button type="submit" disabled={isLoginLoading}>
+            {isLoginLoading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
 

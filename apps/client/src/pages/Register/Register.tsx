@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { useRegister } from '@/hooks/useAuth'
 import { Input } from '@/components/Input/Input'
 import { Button } from '@/components/Button/Button'
 import styles from './Register.module.css'
@@ -11,24 +11,18 @@ export function Register() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const { register } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: FormEvent) => {
+  const { mutate: register, isPending: isRegisterLoading } = useRegister(
+    () => navigate('/'),
+    (error) => setError(error),
+  )
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
-
-    try {
-      await register({ email, password, name: name || undefined })
-      navigate('/')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
-    } finally {
-      setLoading(false)
-    }
+    register({ email, password, name: name })
   }
 
   return (
@@ -45,6 +39,7 @@ export function Register() {
             type="text"
             placeholder="John Doe"
             value={name}
+            required
             onChange={(e) => setName(e.target.value)}
           />
 
@@ -66,8 +61,8 @@ export function Register() {
             required
           />
 
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating account...' : 'Sign up'}
+          <Button type="submit" disabled={isRegisterLoading}>
+            {isRegisterLoading ? 'Creating account...' : 'Sign up'}
           </Button>
         </form>
 

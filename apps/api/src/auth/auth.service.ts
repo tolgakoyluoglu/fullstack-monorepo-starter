@@ -3,12 +3,13 @@ import { DbService } from '../db/db.service'
 import { users } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
+import { LoginDto, RegisterDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {
   constructor(private dbService: DbService) {}
 
-  async register(email: string, password: string, name?: string) {
+  async register({ email, password, name }: RegisterDto) {
     const existingUser = await this.dbService.db
       .select()
       .from(users)
@@ -32,8 +33,7 @@ export class AuthService {
     return newUser
   }
 
-  async login(email: string, password: string) {
-    // Find user by email
+  async login({ email, password }: LoginDto) {
     const [user] = await this.dbService.db
       .select()
       .from(users)

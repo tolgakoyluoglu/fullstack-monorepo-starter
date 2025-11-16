@@ -1,17 +1,9 @@
-import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/Button/Button'
 import styles from './Home.module.css'
+import { useUser } from '@/hooks/useUser'
 
 export function Home() {
-  const { user, logout } = useAuth()
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
+  const { user, logout } = useUser()
 
   return (
     <div className={styles.container}>
@@ -23,7 +15,7 @@ export function Home() {
             {user.name && <p className={styles.name}>{user.name}</p>}
           </div>
         )}
-        <Button onClick={handleLogout} variant="secondary">
+        <Button onClick={logout} variant="secondary">
           Logout
         </Button>
       </div>

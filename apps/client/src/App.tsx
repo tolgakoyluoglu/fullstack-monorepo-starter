@@ -1,17 +1,26 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthProvider'
-import { useAuth } from './hooks/useAuth'
+import { useUser } from './hooks/useUser'
 import { Login } from './pages/Login/Login'
 import { Register } from './pages/Register/Register'
 import { Home } from './pages/Home/Home'
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, loading } = useUser()
 
   if (loading) {
     return <div>Loading...</div>
   }
-
   if (!user) {
     return <Navigate to="/login" />
   }
@@ -20,12 +29,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, loading } = useUser()
 
   if (loading) {
     return <div>Loading...</div>
   }
-
   if (user) {
     return <Navigate to="/" />
   }
@@ -66,11 +74,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 
