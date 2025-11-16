@@ -1,0 +1,28 @@
+{
+  "name": "freelancers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for freelancers project",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "concurrently -n \"client,api\" -c \"blue,green\" \"npm run dev:client\" \"npm run dev:api\"",
+    "dev:client": "npm run dev --workspace=client",
+    "dev:api": "npm run start:dev --workspace=api",
+    "start": "concurrently \"npm:start:*\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
+    "db": "docker compose up -d",
+    "db:stop": "docker compose down",
+    "db:restart": "docker compose restart",
+    "db:logs": "docker compose logs -f postgres"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.6.2"
+  }
+}
