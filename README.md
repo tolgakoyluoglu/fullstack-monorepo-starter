@@ -1,4 +1,4 @@
-# Freelancers
+# Fullstack Monorepo Starter
 
 A full-stack monorepo application with authentication.
 
