@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '@/lib/axios'
 import { AuthContext } from './AuthContext'
-import type { RegisterDto, LoginDto, User } from '@freelancers/shared'
+import type { RegisterDto, LoginDto, User } from '@fullstack-monorepo/shared'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

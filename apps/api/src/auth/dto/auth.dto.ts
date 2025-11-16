@@ -1,1 +1,1 @@
-export type { RegisterDto, LoginDto } from '@freelancers/shared'
+export type { RegisterDto, LoginDto } from '@fullstack-monorepo/shared'

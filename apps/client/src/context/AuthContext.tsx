@@ -1,4 +1,4 @@
-import type { User, LoginDto, RegisterDto } from '@freelancers/shared'
+import type { User, LoginDto, RegisterDto } from '@fullstack-monorepo/shared'
 import { createContext } from 'react'
 
 interface AuthContextType {

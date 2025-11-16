@@ -1,8 +1,8 @@
 {
-  "name": "freelancers",
+  "name": "fullstack-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Monorepo for freelancers project",
+  "description": "Monorepo for fullstack-monorepo project",
   "workspaces": [
     "apps/*",
     "packages/*"
