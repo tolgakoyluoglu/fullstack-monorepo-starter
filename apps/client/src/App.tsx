@@ -2,9 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthProvider'
 import { useUser } from './hooks/useUser'
-import { Login } from './pages/Login/Login'
-import { Register } from './pages/Register/Register'
-import { Home } from './pages/Home/Home'
+import { Login } from './pages/login/Login'
+import { Register } from './pages/register/Register'
+import { Home } from './pages/home/Home'
 
 const queryClient = new QueryClient({
   defaultOptions: {
