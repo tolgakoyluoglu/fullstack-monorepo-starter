@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { useUser } from '@/hooks/useUser'
 
 export function Home() {
