@@ -1,19 +1,13 @@
 import { Controller, Get, UseGuards } from '@nestjs/common'
-import { AppService } from './app.service'
 import { UserRole } from '@fullstack-monorepo/shared'
 import { Roles } from './auth/decorators/roles.decorator'
 import { RolesGuard } from './auth/guards/roles.guard'
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor() {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello()
-  }
-
-  @Get('health')
+  @Get('')
   getHealth() {
     return {
       status: 'ok',

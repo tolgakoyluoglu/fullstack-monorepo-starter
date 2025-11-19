@@ -6,12 +6,14 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 export interface User {
-  id: number
+  id: string
   email: string
   name: string
+  emailVerified: boolean
+  createdAt: Date
+  updatedAt: Date
+  image?: string | null
   role: UserRole
-  createdAt: string
-  updatedAt: string
 }
 
 export interface RegisterDto {
@@ -23,9 +25,4 @@ export interface RegisterDto {
 export interface LoginDto {
   email: string
   password: string
-}
-
-export interface AuthResponse {
-  message: string
-  user: User
 }

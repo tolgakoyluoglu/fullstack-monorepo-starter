@@ -1,16 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
-import { UserRole } from '@fullstack-monorepo/shared'
+import { UserRole, User } from '@fullstack-monorepo/shared'
 import { ROLES_KEY } from '../decorators/roles.decorator'
-import { AuthService } from '../auth.service'
+import { auth } from '../../lib/auth'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private authService: AuthService,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
@@ -23,20 +20,20 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>()
-    const userId = request.session.userId
+    const headers = new Headers()
+    Object.entries(request.headers).forEach(([key, value]) => {
+      if (value) {
+        headers.set(key, Array.isArray(value) ? value[0] : value)
+      }
+    })
 
-    if (!userId) {
+    const session = await auth.api.getSession({ headers })
+    if (!session) {
       throw new UnauthorizedException('Not authenticated')
     }
 
-    const user = await this.authService.getUserById(userId)
-
-    if (!user) {
-      throw new UnauthorizedException('User not found')
-    }
-
-    const hasRole = requiredRoles.includes(user.role as UserRole)
-
+    const user = session.user as User
+    const hasRole = requiredRoles.includes(user.role)
     if (!hasRole) {
       throw new UnauthorizedException('Insufficient permissions')
     }

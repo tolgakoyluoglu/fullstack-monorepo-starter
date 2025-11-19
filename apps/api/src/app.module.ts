@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common'
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
 import { AppController } from './app.controller'
-import { AppService } from './app.service'
 import { DbModule } from './db/db.module'
 import { AuthModule } from './auth/auth.module'
+import { LoggerMiddleware } from './common/middleware/logger.middleware'
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { AuthModule } from './auth/auth.module'
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute
-        limit: 10, // 10 requests per minute
+        limit: 50, // 50 requests
       },
     ]),
     DbModule,
@@ -24,11 +24,14 @@ import { AuthModule } from './auth/auth.module'
   ],
   controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*')
+  }
+}
