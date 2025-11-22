@@ -3,11 +3,14 @@ import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
 import { UserRole, User } from '@fullstack-monorepo/shared'
 import { ROLES_KEY } from '../decorators/roles.decorator'
-import { auth } from '../../lib/auth'
+import { AuthService } from '../auth.service'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private authService: AuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
@@ -27,7 +30,7 @@ export class RolesGuard implements CanActivate {
       }
     })
 
-    const session = await auth.api.getSession({ headers })
+    const session = await this.authService.auth.api.getSession({ headers })
     if (!session) {
       throw new UnauthorizedException('Not authenticated')
     }

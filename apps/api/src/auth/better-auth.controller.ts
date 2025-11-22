@@ -1,12 +1,14 @@
 import { All, Controller, Req, Res } from '@nestjs/common'
 import { Request, Response } from 'express'
-import { auth } from '../lib/auth'
 import { toNodeHandler } from 'better-auth/node'
+import { AuthService } from './auth.service'
 
 @Controller('api/auth')
 export class BetterAuthController {
-  @All('*')
+  constructor(private authService: AuthService) {}
+
+  @All('*path')
   async handleAuth(@Req() req: Request, @Res() res: Response) {
-    return toNodeHandler(auth)(req, res)
+    return toNodeHandler(this.authService.auth)(req, res)
   }
 }
