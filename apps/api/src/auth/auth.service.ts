@@ -1,60 +1,65 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { UserRole } from '@fullstack-monorepo/shared'
-import { DbService } from '../db/db.service'
-import { users, sessions, accounts, verifications } from '../db/schema'
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
-  private _auth: ReturnType<typeof betterAuth> | null = null
+export class AuthService {
+  constructor(private prisma: PrismaService) {}
 
-  constructor(
-    private configService: ConfigService,
-    private dbService: DbService,
-  ) {}
+  async register(dto: RegisterDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
-  onModuleInit() {
-    const clientUrl = this.configService.get<string>('CLIENT_URL')
-    if (!clientUrl) {
-      throw new Error('CLIENT_URL is not defined in environment variables')
+    if (existingUser) {
+      throw new ConflictException('User already exists');
     }
 
-    this._auth = betterAuth({
-      database: drizzleAdapter(this.dbService.db, {
-        provider: 'pg',
-        schema: {
-          user: users,
-          session: sessions,
-          account: accounts,
-          verification: verifications,
-        },
-      }),
-      emailAndPassword: {
-        enabled: true,
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password: hashedPassword,
+        name: dto.name,
       },
-      user: {
-        additionalFields: {
-          role: {
-            type: 'string',
-            defaultValue: UserRole.USER,
-            required: true,
-          },
-        },
-      },
-      session: {
-        expiresIn: 60 * 60 * 24 * 30, // 30 days
-        updateAge: 60 * 60 * 24, // 1 day
-      },
-      trustedOrigins: [clientUrl],
-    })
+    });
+
+    const { password, ...result } = user;
+    return result;
   }
 
-  get auth() {
-    if (!this._auth) {
-      throw new Error('Auth not initialized')
+  async validateUser(dto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    return this._auth
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const { password, ...result } = user;
+    return result;
+  }
+
+  async findUserById(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) return null;
+
+    const { password, ...result } = user;
+    return result;
   }
 }

@@ -1,59 +1,63 @@
-import { useMutation } from '@tanstack/react-query'
-import { signIn, signUp } from '@/lib/auth'
-import type { LoginDto, RegisterDto } from '@fullstack-monorepo/shared'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import type { User, LoginDto, RegisterDto } from '@fullstack-monorepo/shared'
+import { useNavigate } from 'react-router-dom'
 
-export const useLogin = (
-  onSuccess?: () => void | Promise<void>,
-  onError?: (error: string) => void,
-) => {
+export function useCurrentUser() {
+  return useQuery({
+    queryKey: ['me'],
+    queryFn: async () => {
+      const res = await api.get<User>('/auth/me')
+      return res.data
+    },
+    retry: false,
+    retryOnMount: false,
+  })
+}
+
+export function useLogin() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
   return useMutation({
-    mutationFn: async (credentials: LoginDto) => {
-      const result = await signIn.email({
-        email: credentials.email,
-        password: credentials.password,
-      })
-
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-
-      return result
+    mutationFn: async (data: LoginDto) => {
+      const res = await api.post<User>('/auth/login', data)
+      return res.data
     },
-    onSuccess: async () => {
-      if (onSuccess) await onSuccess()
-    },
-    onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed, please try again'
-      if (onError) onError(errorMessage)
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+      navigate('/')
     },
   })
 }
 
-export const useRegister = (
-  onSuccess?: () => void | Promise<void>,
-  onError?: (error: string) => void,
-) => {
+export function useRegister() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async (userData: RegisterDto) => {
-      const result = await signUp.email({
-        email: userData.email,
-        password: userData.password,
-        name: userData.name,
-      })
-
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-
-      return result
+    mutationFn: async (data: RegisterDto) => {
+      const res = await api.post<User>('/auth/register', data)
+      return res.data
     },
-    onSuccess: async () => {
-      if (onSuccess) await onSuccess()
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+      navigate('/')
     },
-    onError: (error) => {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Registration failed, please try again'
-      if (onError) onError(errorMessage)
+  })
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.post('/auth/logout')
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['me'], null)
+      navigate('/login')
     },
   })
 }

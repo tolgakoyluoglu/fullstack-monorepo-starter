@@ -1,86 +1,50 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from './context/AuthProvider'
-import { useUser } from './hooks/useUser'
-import { Login } from './pages/login/Login'
-import { Register } from './pages/register/Register'
-import { Home } from './pages/home/Home'
+import { Routes, Route } from 'react-router-dom'
+import RegisterPage from './pages/RegisterPage'
+import LoginPage from './pages/LoginPage'
+import { useUser } from './providers/UserProvider'
+import { Button } from './components/ui/button'
+import { ProtectedRoute } from './components/ProtectedRoute'
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-})
+function Dashboard() {
+  const { user, logout } = useUser()
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser()
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-  if (!user) {
-    return <Navigate to="/login" />
-  }
-
-  return <>{children}</>
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Welcome, {user?.name || user?.email}!</h1>
+      <p className="mb-4">You are logged in.</p>
+      <Button onClick={logout}>Logout</Button>
+    </div>
+  )
 }
 
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser()
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-  if (user) {
-    return <Navigate to="/" />
-  }
-
-  return <>{children}</>
-}
-
-function AppRoutes() {
+function App() {
   return (
     <Routes>
       <Route
-        path="/"
+        path="/register"
         element={
-          <ProtectedRoute>
-            <Home />
+          <ProtectedRoute requireAuth={false}>
+            <RegisterPage />
           </ProtectedRoute>
         }
       />
       <Route
         path="/login"
         element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
+          <ProtectedRoute requireAuth={false}>
+            <LoginPage />
+          </ProtectedRoute>
         }
       />
       <Route
-        path="/register"
+        path="/"
         element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
         }
       />
     </Routes>
-  )
-}
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
   )
 }
 
