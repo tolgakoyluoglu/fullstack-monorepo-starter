@@ -29,8 +29,11 @@ export default function RegisterPage() {
 
   function onSubmit(values: RegisterDto) {
     register(values, {
-      onError: (err: any) => {
-        setError(err.response?.data?.message || 'Registration failed')
+      onError: (err: Error) => {
+        setError(
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+            'Registration failed',
+        )
       },
     })
   }

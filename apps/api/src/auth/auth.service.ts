@@ -30,7 +30,7 @@ export class AuthService {
       },
     });
 
-    const { password, ...result } = user;
+    const { password: _password, ...result } = user;
     return result;
   }
 
@@ -48,7 +48,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const { password, ...result } = user;
+    const { password: _password, ...result } = user;
     return result;
   }
 
@@ -59,7 +59,7 @@ export class AuthService {
 
     if (!user) return null;
 
-    const { password, ...result } = user;
+    const { password: _password, ...result } = user;
     return result;
   }
 }

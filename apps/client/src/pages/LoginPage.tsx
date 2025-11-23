@@ -28,8 +28,11 @@ export default function LoginPage() {
 
   function onSubmit(values: LoginDto) {
     login(values, {
-      onError: (err: any) => {
-        setError(err.response?.data?.message || 'Login failed')
+      onError: (err: Error) => {
+        setError(
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+            'Login failed',
+        )
       },
     })
   }

@@ -59,4 +59,4 @@ async function bootstrap() {
   console.log('Server running on http://localhost:3000');
 }
 
-bootstrap();
+void bootstrap();

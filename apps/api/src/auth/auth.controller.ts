@@ -30,7 +30,7 @@ export class AuthController {
   async logout(@Req() req: Request) {
     return new Promise((resolve, reject) => {
       req.session.destroy((err) => {
-        if (err) reject(err);
+        if (err) return reject(new Error(String(err)));
         resolve({ message: 'Logged out successfully' });
       });
     });
@@ -38,7 +38,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(SessionGuard)
-  async me(@UserDecorator() user: User) {
+  me(@UserDecorator() user: User) {
     return user;
   }
 }
