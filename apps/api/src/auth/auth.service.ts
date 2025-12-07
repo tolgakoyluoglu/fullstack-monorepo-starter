@@ -1,65 +1,63 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  ConflictException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import * as bcrypt from 'bcrypt';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
+import { PrismaService } from '../prisma/prisma.service'
+import { RegisterDto } from './dto/register.dto'
+import { LoginDto } from './dto/login.dto'
+import type { User } from '@fullstack-monorepo/shared'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AuthService {
   constructor(private prisma: PrismaService) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<User> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
-    });
+    })
 
     if (existingUser) {
-      throw new ConflictException('User already exists');
+      throw new ConflictException('User already exists')
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, 10)
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
       },
-    });
+    })
 
-    const { password: _password, ...result } = user;
-    return result;
+    const { password: _password, ...result } = user
+    return result
   }
 
-  async validateUser(dto: LoginDto) {
+  async validateUser(dto: LoginDto): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
-    });
+    })
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials')
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password)
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials')
     }
 
-    const { password: _password, ...result } = user;
-    return result;
+    const { password: _password, ...result } = user
+    return result
   }
 
-  async findUserById(id: number) {
+  async findUserById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
-    });
+    })
 
-    if (!user) return null;
+    if (!user) return null
 
-    const { password: _password, ...result } = user;
-    return result;
+    const { password: _password, ...result } = user
+    return result
   }
 }

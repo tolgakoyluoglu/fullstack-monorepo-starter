@@ -5,16 +5,24 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],
       },
     }),
-    tailwindcss(),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+    },
+  },
+  optimizeDeps: {
+    include: ['@fullstack-monorepo/shared'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /shared/],
     },
   },
 })

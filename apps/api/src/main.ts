@@ -1,62 +1,50 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
-import helmet from 'helmet';
-import { ValidationPipe } from '@nestjs/common';
-import { SanitizePipe } from './common/pipes/sanitize.pipe';
+import { NestFactory } from '@nestjs/core'
+import { AppModule } from './app.module'
+import * as session from 'express-session'
+import helmet from 'helmet'
+import { ConsoleLogger } from '@nestjs/common'
+import { SanitizePipe } from './common/pipes/sanitize.pipe'
+import { setupGracefulShutdown } from './common/shutdown.utils'
+import { createSessionStore, getSessionConfig } from './common/session.config'
+import { Application } from 'express'
+import { getCorsConfig } from './common/cors.config'
 
 function validateEnvironment() {
-  const required = ['DATABASE_URL', 'SESSION_SECRET'];
-  const missing = required.filter((key) => !process.env[key]);
+  const required = ['DATABASE_URL', 'SESSION_SECRET']
+  const missing = required.filter((key) => !process.env[key])
 
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}\n` +
         'Please set them in your .env file',
-    );
+    )
   }
 }
 
 async function bootstrap() {
-  validateEnvironment();
-
-  const app = await NestFactory.create(AppModule);
-
-  app.use(helmet());
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-  });
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
+  validateEnvironment()
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  const app = await NestFactory.create(AppModule, {
+    logger: new ConsoleLogger({
+      json: true,
+      timestamp: true,
     }),
-    new SanitizePipe(),
-  );
+  })
 
-  const PgSession = connectPgSimple(session);
-  app.use(
-    session({
-      store: new PgSession({
-        conString: process.env.DATABASE_URL,
-        createTableIfMissing: false,
-      }),
-      secret: process.env.SESSION_SECRET!,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (reduced from 30 for security)
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-      },
-    }),
-  );
+  app.use(helmet())
+  app.useGlobalPipes(new SanitizePipe())
 
-  await app.listen(3000);
-  console.log('Server running on http://localhost:3000');
+  const { sessionStore, pgPool } = createSessionStore(process.env.DATABASE_URL!)
+  const expressApp = app.getHttpAdapter().getInstance() as Application
+  expressApp.set('trust proxy', 1)
+  app.use(session(getSessionConfig(sessionStore, process.env.SESSION_SECRET!, nodeEnv)))
+
+  const corsConfig = getCorsConfig(nodeEnv)
+  app.enableCors(corsConfig)
+
+  await app.listen(3000)
+  console.log('Server running on http://localhost:3000')
+  setupGracefulShutdown(app, pgPool)
 }
 
-void bootstrap();
+void bootstrap()
