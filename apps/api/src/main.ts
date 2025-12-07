@@ -9,20 +9,7 @@ import { createSessionStore, getSessionConfig } from './common/session.config'
 import { Application } from 'express'
 import { getCorsConfig } from './common/cors.config'
 
-function validateEnvironment() {
-  const required = ['DATABASE_URL', 'SESSION_SECRET']
-  const missing = required.filter((key) => !process.env[key])
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}\n` +
-        'Please set them in your .env file',
-    )
-  }
-}
-
 async function bootstrap() {
-  validateEnvironment()
   const nodeEnv = process.env.NODE_ENV || 'development'
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({
